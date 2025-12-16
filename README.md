@@ -23,7 +23,7 @@ Phần mềm hỗ trợ quản lý hồ sơ nhân viên và tính lương tự �
 | :--- | :--- | :--- |
 | **Việt** | Trưởng nhóm | Login, CRUD Nhân viên, Database |
 | **Quốc** | Thành viên | Chức năng Tăng lương |
-| **Đồng** | Thành viên | Tính lương, Giao diện chính |
+| **Đồng** | Thành viên | Tính lương, Giao diện tính lương |
 | **Tùng** | Thành viên | Công cụ thuế, Nút tải lại |
 | **Hướng** | Thành viên | Thống kê báo cáo |
 
