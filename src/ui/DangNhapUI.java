@@ -108,7 +108,7 @@ public class DangNhapUI extends JFrame {
         lblHint.setToolTipText("Try it!");
         getContentPane().add(lblHint);
         
-        JLabel lblVersion = new JLabel("v0.8.0 (Beta)");									// Cập nhật Version tại đây
+        JLabel lblVersion = new JLabel("v0.9.0 (Beta)");									// Cập nhật Version tại đây
         lblVersion.setFont(new Font("Segoe UI", Font.ITALIC, 10));
         lblVersion.setForeground(Color.GRAY);
         lblVersion.setHorizontalAlignment(javax.swing.SwingConstants.RIGHT);
