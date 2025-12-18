@@ -1,5 +1,7 @@
 package entity;
-																	// Model (Entity) - Việt
+																	// Entity - Việt
+import java.util.Date;
+
 public class NhanVien {
     private String maNV;
     private String hoTen;
@@ -11,6 +13,7 @@ public class NhanVien {
     private long tienPhat;
     private long thucLinh;
     private String tenPB;
+    private Date ngayVaoLam;
 
     public NhanVien() {
     }
@@ -21,6 +24,7 @@ public class NhanVien {
         this.maPB = maPB;
         this.luongCoBan = luongCoBan;
         this.heSoLuong = heSoLuong;
+        this.ngayVaoLam = new Date();
     }
 
     public NhanVien(String maNV, String hoTen, String maPB, long luongCoBan, float heSoLuong, long tienThuong, int soNgayDiTre, long tienPhat, long thucLinh) {
@@ -64,4 +68,12 @@ public class NhanVien {
 
     public String getTenPB() { return tenPB; }
     public void setTenPB(String tenPB) { this.tenPB = tenPB; }
+
+    public Date getNgayVaoLam() {
+        return ngayVaoLam;
+    }
+
+    public void setNgayVaoLam(Date ngayVaoLam) {
+        this.ngayVaoLam = ngayVaoLam;
+    }
 }

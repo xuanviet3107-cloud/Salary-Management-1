@@ -11,45 +11,46 @@ import database.ConnectDB;
 import entity.NhanVien;
 
 public class NhanVienDAO {
-
+	
 	public List<NhanVien> layDanhSachNhanVien(String orderBy) {					// Hàm 'Lấy Danh Sách' - Việt
-        List<NhanVien> list = new ArrayList<>();
-        try {
-            Connection conn = ConnectDB.getConnection();
-            
-            String sql = "SELECT NV.MaNV, NV.HoTen, NV.MaPB, PB.TenPB, NV.LuongCoBan, NV.HeSoLuong, NV.TienThuong, NV.SoNgayDiTre, " +
-                         "(NV.SoNgayDiTre * 100000) AS TienPhat, " +
-                         "((NV.LuongCoBan * NV.HeSoLuong) + NV.TienThuong - (NV.SoNgayDiTre * 100000)) AS ThucLinh " +
-                         "FROM NhanVien NV " +
-                         "LEFT JOIN PhongBan PB ON NV.MaPB = PB.MaPB " + 
-                         "ORDER BY " + orderBy;
-            
-            Statement stmt = conn.createStatement();
-            ResultSet rs = stmt.executeQuery(sql);
+	    List<NhanVien> list = new ArrayList<>();
+	    try {
+	        Connection conn = ConnectDB.getConnection();
+	        
+	        String sql = "SELECT NV.MaNV, NV.HoTen, NV.MaPB, PB.TenPB, NV.LuongCoBan, NV.HeSoLuong, NV.TienThuong, NV.SoNgayDiTre, NV.NgayVaoLam, " +
+	                     "(NV.SoNgayDiTre * 100000) AS TienPhat, " +
+	                     "((NV.LuongCoBan * NV.HeSoLuong) + NV.TienThuong - (NV.SoNgayDiTre * 100000)) AS ThucLinh " +
+	                     "FROM NhanVien NV " +
+	                     "LEFT JOIN PhongBan PB ON NV.MaPB = PB.MaPB " + 
+	                     "ORDER BY " + orderBy;
+	        
+	        Statement stmt = conn.createStatement();
+	        ResultSet rs = stmt.executeQuery(sql);
 
-            while (rs.next()) {
-                NhanVien nv = new NhanVien(
-                    rs.getString("MaNV"),
-                    rs.getString("HoTen"),
-                    rs.getString("MaPB"),
-                    rs.getLong("LuongCoBan"),
-                    rs.getFloat("HeSoLuong"),
-                    rs.getLong("TienThuong"),
-                    rs.getInt("SoNgayDiTre"),
-                    rs.getLong("TienPhat"),
-                    rs.getLong("ThucLinh")
-                );
-                
-                nv.setTenPB(rs.getString("TenPB")); 
-                
-                list.add(nv);
-            }
-            conn.close();
-        } catch (Exception ex) {
-            ex.printStackTrace();
-        }
-        return list;
-    }
+	        while (rs.next()) {
+	            NhanVien nv = new NhanVien(
+	                rs.getString("MaNV"),
+	                rs.getString("HoTen"),
+	                rs.getString("MaPB"),
+	                rs.getLong("LuongCoBan"),
+	                rs.getFloat("HeSoLuong"),
+	                rs.getLong("TienThuong"),
+	                rs.getInt("SoNgayDiTre"),
+	                rs.getLong("TienPhat"),
+	                rs.getLong("ThucLinh")
+	            );
+	            
+	            nv.setTenPB(rs.getString("TenPB")); 
+	            nv.setNgayVaoLam(rs.getDate("NgayVaoLam"));
+	            
+	            list.add(nv);
+	        }
+	        conn.close();
+	    } catch (Exception ex) {
+	        ex.printStackTrace();
+	    }
+	    return list;
+	}
 	
     public boolean themNhanVien(NhanVien nv) {									// Hàm 'Thêm Nhân Viên' - Việt
         try {
@@ -122,8 +123,7 @@ public class NhanVienDAO {
         conn.close();
         return kq;
     }
- 
-    public List<NhanVien> timKiemDaNang(String ma, String ten, String phong, String luong,String orderBy) {		// Hàm 'Tìm kiếm' - Việt
+    public List<NhanVien> timKiemDaNang(String ma, String ten, String phong, String luong, String orderBy) {	// Hàm 'Tìm kiếm' - Việt
         List<NhanVien> list = new ArrayList<>();
         try {
             Connection conn = ConnectDB.getConnection();
@@ -134,7 +134,6 @@ public class NhanVienDAO {
                          "FROM NhanVien NV " +
                          "LEFT JOIN PhongBan PB ON NV.MaPB = PB.MaPB " +
                          "WHERE 1=1"; 
-            // --------------------
             
             if (!ma.isEmpty()) {
                 sql += " AND NV.MaNV LIKE ?";
@@ -172,10 +171,11 @@ public class NhanVienDAO {
                     rs.getFloat("HeSoLuong"),
                     rs.getLong("TienThuong"),
                     rs.getInt("SoNgayDiTre"),
-                    rs.getLong("TienPhat"), 
-                    rs.getLong("ThucLinh") 
+                    rs.getLong("TienPhat"),
+                    rs.getLong("ThucLinh")
                 );
                 nv.setTenPB(rs.getString("TenPB"));
+                nv.setNgayVaoLam(rs.getDate("NgayVaoLam"));
                 list.add(nv);
             }
             conn.close();
@@ -343,5 +343,96 @@ public class NhanVienDAO {
             e.printStackTrace();
         }
         return list;
+    }
+    
+    public boolean capNhatMatKhau(String username, String passMoi) {			// Hàm 'Sửa mật khẩu - Admin' - Việt
+        Connection conn = ConnectDB.getConnection();
+        String sql = "UPDATE TaiKhoan SET Password = ? WHERE Username = ?";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, passMoi);
+            ps.setString(2, username);
+            
+            int n = ps.executeUpdate();
+            conn.close();
+            return n > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    public boolean guiBaoLoi(String tieuDe, String noiDung) {					// Hàm 'Báo lỗi - Admin' - Việt
+        Connection conn = ConnectDB.getConnection();
+        String sql = "INSERT INTO BaoLoi (TieuDe, NoiDung) VALUES (?, ?)";
+        try {
+            PreparedStatement ps = conn.prepareStatement(sql);
+            ps.setString(1, tieuDe);
+            ps.setString(2, noiDung);
+            return ps.executeUpdate() > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    public boolean congTienThuong(long soTien) {								// Hàm 'Thưởng nóng' - Việt
+        String sql = "UPDATE NhanVien SET TienThuong = TienThuong + ?";
+        try {
+            java.sql.Connection con = database.ConnectDB.getConnection();
+            java.sql.PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setLong(1, soTien);
+            int n = stmt.executeUpdate();
+            return n > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+
+    public boolean resetThangMoi() {											// Hàm 'Chốt tháng' - Việt
+        String sql = "UPDATE NhanVien SET SoNgayDiTre = 0, TienPhat = 0, TienThuong = 0";
+        try {
+            java.sql.Connection con = database.ConnectDB.getConnection();
+            java.sql.PreparedStatement stmt = con.prepareStatement(sql);
+            int n = stmt.executeUpdate();
+            return n > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    public boolean congTienThuongTheoPhong(String tenPhong, long soTien) {		// Hàm 'Thưởng Phòng Ban' - Việt
+        String sql = "UPDATE NhanVien SET TienThuong = TienThuong + ? WHERE MaPB IN (SELECT MaPB FROM PhongBan WHERE TenPB = ?)";
+        try {
+            java.sql.Connection con = database.ConnectDB.getConnection();
+            java.sql.PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setLong(1, soTien);
+            stmt.setString(2, tenPhong);
+            
+            int n = stmt.executeUpdate();
+            return n > 0;
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return false;
+    }
+    
+    public String chuyenTenPhongThanhMa(String tenPhong) {						// Hàm 'Chuyển đổi - Phòng Ban' - Việt
+        String maPB = tenPhong; 
+        String sql = "SELECT MaPB FROM PhongBan WHERE TenPB = ?";
+        try {
+            java.sql.Connection con = database.ConnectDB.getConnection();
+            java.sql.PreparedStatement stmt = con.prepareStatement(sql);
+            stmt.setString(1, tenPhong);
+            java.sql.ResultSet rs = stmt.executeQuery();
+            if (rs.next()) {
+                maPB = rs.getString("MaPB");
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return maPB;
     }
 }

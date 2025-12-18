@@ -7,5 +7,6 @@
 	</classpathentry>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/mssql-jdbc-9.4.1.jre8.jar"/>
+	<classpathentry kind="lib" path="C:/Users/Admin/Downloads/sqlite-jdbc-3.50.3.0.jar"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>
