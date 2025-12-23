@@ -105,7 +105,7 @@ public class DangNhapUI extends JFrame {
         btnQuenMK.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
         getContentPane().add(btnQuenMK);
         
-        JLabel lblVersion = new JLabel("v1.2.0");
+        JLabel lblVersion = new JLabel("v1.2.1");
         lblVersion.setFont(new Font("Consolas", Font.ITALIC, 10));
         lblVersion.setForeground(new Color(100, 100, 100));
         lblVersion.setHorizontalAlignment(SwingConstants.RIGHT);

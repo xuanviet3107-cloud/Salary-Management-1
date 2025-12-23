@@ -29,7 +29,7 @@ public class QuanLyNhanVien extends NhanVienUI {
 	Secret ui = new Secret(this);    
     HoSoNhanVien nvUI = new HoSoNhanVien(this);
     HienThiCuaSo view = new HienThiCuaSo(this);
-    XuLyNutBam solve = new XuLyNutBam(this);
+    XuLySuKien solve = new XuLySuKien(this);
     NhanVienDAO dao = new NhanVienDAO();
     
     private static final long serialVersionUID = 2L;
@@ -51,7 +51,7 @@ public class QuanLyNhanVien extends NhanVienUI {
             "Tất cả hệ số", "Dưới 2.0", "2.0 - 3.0", "Trên 3.0"
         }));
         
-        initEvents();
+        xuLyNutBam();
         phanQuyen();
         ui.hienThiGoiYCheat();
     }
@@ -71,37 +71,6 @@ public class QuanLyNhanVien extends NhanVienUI {
             btnThuongNong.addActionListener(e -> solve.xuLyThuongNong());
             btnChotThang.addActionListener(e -> solve.xuLyChotThang());
             btnXuatExcel.addActionListener(e -> solve.xuLyXuatExcel()); 
-            
-            btnPhat.addActionListener(e -> {
-                int row = table.getSelectedRow();
-                if (row < 0) {
-                    JOptionPane.showMessageDialog(this, "Vui lòng chọn nhân viên cần phạt!", "Chưa chọn", JOptionPane.WARNING_MESSAGE);
-                    return;
-                }
-                
-                String maNV = table.getValueAt(row, 0).toString();
-                String hoTen = table.getValueAt(row, 1).toString();
-                
-                String input = JOptionPane.showInputDialog(this, 
-                    "Nhập số ngày đi trễ của " + hoTen + ":\n(Ví dụ: 1, 2, 3...)", 
-                    "Xử Lý Vi Phạm", JOptionPane.QUESTION_MESSAGE);
-                    
-                if (input != null && !input.trim().isEmpty()) {
-                    try {
-                        int soNgay = Integer.parseInt(input.trim());
-                        if (soNgay < 0) {
-                            JOptionPane.showMessageDialog(this, "Số ngày không được âm!");
-                            return;
-                        }
-                        dao.capNhatPhat(maNV, soNgay); 
-                        dao.ghiLichSu(maNV, "Phạt đi trễ", "Số ngày trễ: " + soNgay, taiKhoanHienTai);
-                        JOptionPane.showMessageDialog(this, "✅ Đã ghi nhận phạt cho: " + hoTen);
-                        loadData("NV.MaNV ASC");
-                    } catch (Exception ex) {
-                        JOptionPane.showMessageDialog(this, "Vui lòng nhập số nguyên hợp lệ!");
-                    }
-                }
-            });
             return;
         }
 
@@ -142,7 +111,7 @@ public class QuanLyNhanVien extends NhanVienUI {
         }
     }
     
-    private void initEvents() {
+    private void xuLyNutBam() {
         btnSortMa.addActionListener(e -> reloadTable("NV.MaNV ASC")); 
         btnSortTen.addActionListener(e -> reloadTable("NV.HoTen ASC")); 
         btnSortLuong.addActionListener(e -> reloadTable("NV.LuongCoBan DESC")); 
@@ -380,16 +349,17 @@ public class QuanLyNhanVien extends NhanVienUI {
             });
         
         btnChamCongLe.addActionListener(e -> solve.xuLyChamCongNgayLe());
+        btnPhat.addActionListener(e -> solve.xuLyPhat());
     }
     
-    private long layGiaTriTuCbo(JComboBox<String> cbo) throws NumberFormatException {
+    private static long layGiaTriTuCbo(JComboBox<String> cbo) throws NumberFormatException {
         String val = cbo.getSelectedItem() != null ? cbo.getSelectedItem().toString() : "0";
         val = val.replaceAll("[^0-9]", "");
         if (val.isEmpty()) return 0;
         return Long.parseLong(val);
     }
     
-    private float layGiaTriFloatTuCbo(JComboBox<String> cbo) throws NumberFormatException {
+    private static float layGiaTriFloatTuCbo(JComboBox<String> cbo) throws NumberFormatException {
         String val = cbo.getSelectedItem() != null ? cbo.getSelectedItem().toString() : "0";
         String[] parts = val.split(" ");
         return Float.parseFloat(parts[0]);

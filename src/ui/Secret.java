@@ -24,30 +24,30 @@ public class Secret {
         Color colorHint = new Color(120, 120, 120);
 
         // Hint Snake
-        ui.lblSnake = new JLabel("Solid Snake..."); // Sửa: ui.lblSnake
+        ui.lblSnake = new JLabel("Solid Snake..."); 
         ui.lblSnake.setFont(fontHint);
         ui.lblSnake.setForeground(colorHint);
-        ui.lblSnake.setBounds(580, 67, 200, 20); 
+        ui.lblSnake.setBounds(589, 67, 200, 20); 
         ui.lblSnake.setVisible(false);      
-        ui.getLayeredPane().add(ui.lblSnake, javax.swing.JLayeredPane.POPUP_LAYER); // Sửa: ui.getLayeredPane
+        ui.getLayeredPane().add(ui.lblSnake, javax.swing.JLayeredPane.POPUP_LAYER); 
 
         // Hint Contra
-        ui.lblContraHint = new JLabel("Where are the 30 lives?"); // Sửa: ui.lblContraHint
+        ui.lblContraHint = new JLabel("Where are the 30 lives?"); 
         ui.lblContraHint.setFont(fontHint);
         ui.lblContraHint.setForeground(colorHint);
         ui.lblContraHint.setBounds(430, 167, 200, 20); 
         ui.lblContraHint.setVisible(false); 
-        ui.getLayeredPane().add(ui.lblContraHint, javax.swing.JLayeredPane.POPUP_LAYER); // Sửa: ui.getLayeredPane
+        ui.getLayeredPane().add(ui.lblContraHint, javax.swing.JLayeredPane.POPUP_LAYER);
         
         // Hint Giao Diện Ẩn
-        ui.lblNeon = new JLabel("Press 'V' once it is unlocked..."); // Sửa: ui.lblNeon
+        ui.lblNeon = new JLabel("Press 'V' once it is unlocked"); 
         ui.lblNeon.setFont(fontHint);
         ui.lblNeon.setForeground(colorHint);
         ui.lblNeon.setBounds(410, 127, 200, 20); 
         ui.lblNeon.setVisible(false);        
-        ui.getLayeredPane().add(ui.lblNeon, javax.swing.JLayeredPane.POPUP_LAYER); // Sửa: ui.getLayeredPane
+        ui.getLayeredPane().add(ui.lblNeon, javax.swing.JLayeredPane.POPUP_LAYER);
         
-        ui.repaint(); // Sửa: ui.repaint()
+        ui.repaint();
     }
     
     public void unlockSecret(String codeName) {
@@ -75,18 +75,18 @@ public class Secret {
         Color White = new Color(236, 240, 241);
         Color grayBackground = new Color(38, 50, 56);
 
-        ui.getContentPane().setBackground(grayBackground); // Sửa: ui.getContentPane
+        ui.getContentPane().setBackground(grayBackground); 
         
         toMauNeonToanBo(ui.getContentPane(), Light, White, grayBackground);
         
-        ui.table.setBackground(grayBackground); // Sửa: ui.table
+        ui.table.setBackground(grayBackground); 
         ui.table.setForeground(White);
         ui.table.setGridColor(new Color(55, 71, 79));
         ui.table.getTableHeader().setBackground(new Color(55, 71, 79));
         ui.table.getTableHeader().setForeground(Light);
         
-        ui.revalidate(); // Sửa: ui.revalidate
-        ui.repaint();    // Sửa: ui.repaint
+        ui.revalidate(); 	
+        ui.repaint();   
     }
     
     public void toMauNeonToanBo(java.awt.Container container, Color pink, Color blue, Color bg) {
@@ -121,11 +121,11 @@ public class Secret {
         Color defaultBg = new Color(240, 240, 240);
         Color defaultText = Color.BLACK;
         
-        ui.getContentPane().setBackground(defaultBg); // Sửa: ui.getContentPane
+        ui.getContentPane().setBackground(defaultBg); 
 
         resetMauToanBo(ui.getContentPane(), defaultBg, defaultText);
         
-        ui.table.setBackground(Color.WHITE); // Sửa: ui.table
+        ui.table.setBackground(Color.WHITE); 
         ui.table.setForeground(Color.BLACK);
         ui.table.setGridColor(new Color(200, 200, 200)); 
         ui.table.getTableHeader().setBackground(new Color(230, 230, 230));
@@ -133,8 +133,7 @@ public class Secret {
         
         ui.revalidate();
         ui.repaint();
-        
-        JOptionPane.showMessageDialog(ui, "Back to Reality! 🌍", "Deactivated", JOptionPane.INFORMATION_MESSAGE);
+   
     }
     
     public void resetMauToanBo(java.awt.Container container, Color bg, Color text) {

@@ -2,6 +2,7 @@ package ui;
 
 import java.awt.GridLayout;
 import java.time.LocalDate;
+
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
@@ -10,16 +11,16 @@ import javax.swing.JPanel;
 import entity.NhanVien;
 import logic.XuLyTangLuong;
 
-public class XuLyNutBam {
+public class XuLySuKien {
   
     private QuanLyNhanVien solve;
 
-    public XuLyNutBam(QuanLyNhanVien solve) {
+    public XuLySuKien(QuanLyNhanVien solve) {
         this.solve = solve;
     }
 
     public void xuLyGiamLuong() {
-        int row = solve.table.getSelectedRow(); // Sửa: ui.table
+        int row = solve.table.getSelectedRow();
         if (row < 0) {
             JOptionPane.showMessageDialog(solve, "Vui lòng chọn nhân viên cần giảm lương!", "Thông báo", JOptionPane.WARNING_MESSAGE);
             return;
@@ -51,10 +52,10 @@ public class XuLyNutBam {
 
         if (confirm == JOptionPane.YES_OPTION) {
             try {
-                // Sửa: Dùng chung dao của Sếp
+
                 solve.dao.tangLuong(maNV, -phanTram);
                 JOptionPane.showMessageDialog(solve, "Đã giảm lương thành công!");
-                solve.loadData("NV.MaNV ASC"); // Sửa: ui.loadData (Nhớ mở public bên kia nhé)
+                solve.loadData("NV.MaNV ASC");
             } catch (Exception ex) {
                 ex.printStackTrace();
                 JOptionPane.showMessageDialog(solve, "Lỗi: " + ex.getMessage());
@@ -190,62 +191,89 @@ public class XuLyNutBam {
         return null;
     }
 
-    public void xuLyChamCongNgayLe() {
-        LocalDate today = LocalDate.now();
-        String tenLe = layTenNgayLe(today);
 
-        if (tenLe == null) {
-            int confirm = JOptionPane.showConfirmDialog(solve, 
-                "Hôm nay (" + today + ") không phải ngày lễ đặc biệt.\nBạn có muốn tính công thường (x1) cho nhân viên đang chọn không?",
-                "Chấm Công Thường", JOptionPane.YES_NO_OPTION);
-            if (confirm != JOptionPane.YES_OPTION) return;
-        }
 
-        int row = solve.table.getSelectedRow();
-        if (row < 0) {
-            JOptionPane.showMessageDialog(solve, "Vui lòng chọn nhân viên để chấm công!");
-            return;
-        }
+public void xuLyChamCongNgayLe() {
+    LocalDate today = LocalDate.now();
+    
+    String tenLeDuongLich = layTenNgayLe(today); 
 
-        String maNV = solve.table.getValueAt(row, 0).toString();
-        String hoTen = solve.table.getValueAt(row, 1).toString();
-        
-        NhanVien nv = solve.dao.getNhanVienTheoMa(maNV); 
-        
-        long luong1Ngay = (long) ((nv.getLuongCoBan() * nv.getHeSoLuong()) / 26);
-        
-        long tienCongThem = 0;
-        String lyDo = "";
+    int row = solve.table.getSelectedRow();
+    if (row < 0) {
+        JOptionPane.showMessageDialog(solve, "Vui lòng chọn nhân viên để chấm công!");
+        return;
+    }
 
-        if (tenLe != null) {
-            tienCongThem = luong1Ngay * 3; 
-            lyDo = "Đi làm dịp " + tenLe + " (x3 Salary)";
+    String maNV = solve.table.getValueAt(row, 0).toString();
+    String hoTen = solve.table.getValueAt(row, 1).toString();
+    
+    Object[] options = {
+        "Lễ Âm Lịch / Thủ Công",  
+        "Theo Dương Lịch (Auto)",  
+        "❌ Hủy Bỏ"                   
+    };
+
+    int choice = JOptionPane.showOptionDialog(solve,
+        "Hôm nay là: " + today + "\n" +
+        "Hệ thống phát hiện lễ dương lịch: " + (tenLeDuongLich != null ? tenLeDuongLich : "Không có") + "\n\n" +
+        "Bạn muốn chấm công cho [" + hoTen + "] theo chế độ nào?",
+        "Chế Độ Chấm Công",
+        JOptionPane.YES_NO_CANCEL_OPTION,
+        JOptionPane.QUESTION_MESSAGE,
+        null,
+        options,
+        options[1]); 
+
+    long heSoLuongNgay = 1; 
+    String lyDo = "";
+    
+    if (choice == 2 || choice == JOptionPane.CLOSED_OPTION) {
+        return;
+    }
+
+    if (choice == 0) {
+        String tenLeInput = JOptionPane.showInputDialog(solve, 
+            "Nhập tên ngày lễ (Ví dụ: Mùng 1 Tết, Giỗ Tổ...):", 
+            "Xác nhận Lễ Đặc Biệt", 
+            JOptionPane.INFORMATION_MESSAGE);
             
-            JOptionPane.showMessageDialog(solve, 
-                "✨ PHÁT HIỆN DỊP LỄ: " + tenLe.toUpperCase() + " ✨\n" +
-                "Hệ thống sẽ tự động nhân 3 (x3) lương ngày hôm nay!", 
-                "Special Event Triggered", JOptionPane.INFORMATION_MESSAGE);
+        if (tenLeInput == null || tenLeInput.trim().isEmpty()) return;
+        
+        heSoLuongNgay = 3;
+        lyDo = "Trực lễ: " + tenLeInput + " (x" + heSoLuongNgay + ")";
+    }
+
+    else if (choice == 1) {
+        if (tenLeDuongLich != null) {
+
+            heSoLuongNgay = 3;
+            lyDo = "Trực lễ: " + tenLeDuongLich + " (x3 Auto)";
         } else {
-            tienCongThem = luong1Ngay;
-            lyDo = "Lương làm thêm ngày " + today;
-        }
-
-        int chon = JOptionPane.showConfirmDialog(solve, 
-            "Nhân viên: " + hoTen + "\n" +
-            "Lương 1 ngày gốc: " + String.format("%,d VNĐ", luong1Ngay) + "\n" +
-            "---------------------------------\n" +
-            "CỘNG THÊM: " + String.format("%,d VNĐ", tienCongThem) + "\n" +
-            "Lý do: " + lyDo,
-            "Xác Nhận Cộng Lương", JOptionPane.YES_NO_OPTION);
-
-        if (chon == JOptionPane.YES_OPTION) {
-            solve.dao.congTienThuongChoNhanVien(maNV, tienCongThem);
-            solve.dao.ghiLichSu(maNV, "Chấm công đặc biệt", lyDo + " - Số tiền: " + String.format("%,d", tienCongThem), solve.taiKhoanHienTai);
-            
-            solve.loadData("NV.MaNV ASC"); 
-            JOptionPane.showMessageDialog(solve, "✅ Đã cập nhật thu nhập thành công!");
+            heSoLuongNgay = 1;
+            lyDo = "Làm thêm ngày thường (" + today + ")";
         }
     }
+
+    NhanVien nv = solve.dao.getNhanVienTheoMa(maNV); 
+    long luong1Ngay = (long) ((nv.getLuongCoBan() * nv.getHeSoLuong()) / 26);
+    long tienCongThem = luong1Ngay * heSoLuongNgay;
+
+    int confirm = JOptionPane.showConfirmDialog(solve, 
+        "XÁC NHẬN CHẤM CÔNG:\n" +
+        "- Nhân viên: " + hoTen + "\n" +
+        "- Chế độ: " + lyDo + "\n" +
+        "- Tiền cộng thêm: " + String.format("%,d VNĐ", tienCongThem),
+        "Thực Thi", JOptionPane.YES_NO_OPTION);
+
+    if (confirm == JOptionPane.YES_OPTION) {
+        solve.dao.congTienThuongChoNhanVien(maNV, tienCongThem);
+        solve.dao.ghiLichSu(maNV, "Chấm công", lyDo + " - Tiền: " + String.format("%,d", tienCongThem), solve.taiKhoanHienTai);
+        
+ 
+        solve.loadData("NV.MaNV ASC"); 
+        JOptionPane.showMessageDialog(solve, "✅ Đã chấm công thành công!");
+    }
+}
     
     public void xuLyTimKiemDaNang() { 
         // Lấy dữ liệu từ các ô nhập liệu của Sếp
@@ -336,6 +364,37 @@ public class XuLyNutBam {
                 }
             } catch (Exception ex) {
                 JOptionPane.showMessageDialog(solve, "Lỗi: " + ex.getMessage());
+            }
+        }
+    }
+    
+    public void xuLyPhat() {
+        int row = solve.table.getSelectedRow();
+        if (row < 0) {
+            JOptionPane.showMessageDialog(solve, "Vui lòng chọn nhân viên cần phạt!", "Chưa chọn", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        String maNV = solve.table.getValueAt(row, 0).toString();
+        String hoTen = solve.table.getValueAt(row, 1).toString();
+        
+        String input = JOptionPane.showInputDialog(solve, 
+            "Nhập số ngày đi trễ của " + hoTen + ":\n(Ví dụ: 1, 2, 3...)", 
+            "Xử Lý Vi Phạm", JOptionPane.QUESTION_MESSAGE);
+            
+        if (input != null && !input.trim().isEmpty()) {
+            try {
+                int soNgay = Integer.parseInt(input.trim());
+                if (soNgay < 0) {
+                    JOptionPane.showMessageDialog(solve, "Số ngày không được âm!");
+                    return;
+                }
+                solve.dao.capNhatPhat(maNV, soNgay); 
+                solve.dao.ghiLichSu(maNV, "Phạt đi trễ", "Số ngày trễ: " + soNgay, solve.taiKhoanHienTai);
+                JOptionPane.showMessageDialog(solve, "✅ Đã ghi nhận phạt cho: " + hoTen);
+                solve.loadData("NV.MaNV ASC");
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(solve, "Vui lòng nhập số nguyên hợp lệ!");
             }
         }
     }

@@ -31,6 +31,7 @@ import javax.swing.table.DefaultTableModel;
 
 public class ThongKeAdmin extends JFrame {
     private static final long serialVersionUID = 2L;
+    
     private DefaultTableModel mainModel;
 
     private final Color COL_PRIMARY = new Color(0, 102, 204);     
