@@ -21,37 +21,36 @@ public class ConnectDB {
 
     public static Connection getConnection() {
         Properties props = new Properties();
-        boolean coFileCauHinh = false; // 1. Thêm biến cờ để kiểm tra
+        boolean coFileCauHinh = false; 
         
         try {
             File f = new File(getRealPath(CONFIG_FILE));
             if (f.exists()) {
                 try (FileInputStream in = new FileInputStream(f)) { 
                     props.load(in); 
-                    coFileCauHinh = true; // 2. Nếu file tồn tại thì đánh dấu là True
+                    coFileCauHinh = true; 
                 }
             } else {
                 setDefaults(props);
-                // File không tồn tại -> coFileCauHinh vẫn là False
             }
         } catch (Exception ex) {
             setDefaults(props);
         }
 
-        // 3. LOGIC MỚI: Nếu chưa có file cấu hình -> Hiện bảng ngay lập tức!
         if (!coFileCauHinh) {
-            // Nếu người dùng bấm Cancel (hàm trả về true) thì thoát app luôn
             if (showConfigDialog(props)) System.exit(0);
         }
 
-        // 4. Sau khi đã cấu hình xong (hoặc đã có file), mới bắt đầu thử kết nối
         while (true) {
             try {
                 Connection conn = tryConnect(props);
-                if (conn != null) return conn;
+                if (conn != null) {
+                    // [MỚI] Kết nối xong là kiểm tra nâng cấp ngay!
+                    kiemTraVaCapNhatCauTruc(conn); 
+                    return conn;
+                }
             } catch (Exception ex) {}
 
-            // Nếu kết nối thất bại (vd: sai pass SQL Server) thì lại hiện bảng
             if (showConfigDialog(props)) System.exit(0);
         }
     }
@@ -66,7 +65,6 @@ public class ConnectDB {
     }
 
     private static Connection tryConnect(Properties props) {
-
         try {
             String type = props.getProperty("dbType", "SQLite");
             Connection c = null;
@@ -74,13 +72,7 @@ public class ConnectDB {
             if ("SQLite".equals(type)) {
                 Class.forName("org.sqlite.JDBC");
                 String dbPath = getRealPath("konami_data.db");
-                
-                // [ĐÃ XÓA] Dòng thông báo tìm DB ở đây đã bay màu theo yêu cầu!
-                
                 c = DriverManager.getConnection("jdbc:sqlite:" + dbPath);
-                
-                taoBangSQLiteNeuChuaCo(c);
-                
             } else {
                 Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver");
                 String url = "jdbc:sqlserver://" + props.getProperty("host") + ":" + props.getProperty("port") +
@@ -95,31 +87,50 @@ public class ConnectDB {
         }
     }
 
-    private static void taoBangSQLiteNeuChuaCo(Connection c) {
-        try (Statement stmt = c.createStatement()) {
-            stmt.execute("CREATE TABLE IF NOT EXISTS PhongBan (MaPB TEXT PRIMARY KEY, TenPB TEXT)");
+    // --- [HÀM MỚI] Tự động vá lỗi thiếu cột/thiếu bảng cho cả 2 loại DB ---
+    private static void kiemTraVaCapNhatCauTruc(Connection conn) {
+        try {
+            Statement stmt = conn.createStatement();
+            String dbType = conn.getMetaData().getDatabaseProductName(); // SQLite hoặc Microsoft SQL Server
             
-            stmt.execute("CREATE TABLE IF NOT EXISTS NhanVien (" +
-                         "MaNV TEXT PRIMARY KEY, HoTen TEXT, MaPB TEXT, " +
-                         "LuongCoBan INTEGER, HeSoLuong REAL, NgayVaoLam TEXT, " + 
-                         "SoNgayDiTre INTEGER DEFAULT 0, TienPhat INTEGER DEFAULT 0, " +
-                         "TienThuong INTEGER DEFAULT 0, " +
-                         "FOREIGN KEY(MaPB) REFERENCES PhongBan(MaPB))");
-
-            stmt.execute("CREATE TABLE IF NOT EXISTS TaiKhoan (" +
-                         "Username TEXT PRIMARY KEY, " +
-                         "Password TEXT, " +
-                         "Role TEXT, " +
-                         "FOREIGN KEY(Username) REFERENCES NhanVien(MaNV))");
-
-            java.sql.ResultSet rs = stmt.executeQuery("SELECT COUNT(*) FROM PhongBan");
-            if (rs.next() && rs.getInt(1) == 0) {
-                stmt.execute("INSERT INTO PhongBan VALUES ('PB01', 'Phòng Admin')");
-                stmt.execute("INSERT INTO NhanVien (MaNV, HoTen, MaPB, LuongCoBan, HeSoLuong, NgayVaoLam) " +
-                             "VALUES ('NV01', 'Super Admin', 'PB01', 99999999, 1.0, '2025-01-01')");
-                stmt.execute("INSERT INTO TaiKhoan (Username, Password, Role) VALUES ('NV01', '123456', 'Admin')");
+            // 1. VÁ CÁC CỘT THIẾU (Dùng try-catch để lờ đi nếu cột đã có)
+            if (dbType.contains("SQLite")) {
+                String[] cols = {
+                    "ALTER TABLE NhanVien ADD COLUMN GioTangCa DOUBLE DEFAULT 0",
+                    "ALTER TABLE NhanVien ADD COLUMN HeSoTangCa DOUBLE DEFAULT 1.5",
+                    "ALTER TABLE NhanVien ADD COLUMN ThucLinh BIGINT DEFAULT 0",
+                    "ALTER TABLE NhanVien ADD COLUMN LyDoThuongPhat TEXT DEFAULT ''"
+                };
+                for (String sql : cols) try { stmt.executeUpdate(sql); } catch (Exception e) {}
+            } else {
+                // SQL Server
+                String[] cols = {
+                    "ALTER TABLE NhanVien ADD GioTangCa FLOAT DEFAULT 0",
+                    "ALTER TABLE NhanVien ADD HeSoTangCa FLOAT DEFAULT 1.5",
+                    "ALTER TABLE NhanVien ADD ThucLinh BIGINT DEFAULT 0",
+                    "ALTER TABLE NhanVien ADD LyDoThuongPhat NVARCHAR(MAX) DEFAULT ''"
+                };
+                for (String sql : cols) try { stmt.executeUpdate(sql); } catch (Exception e) {}
             }
-        } catch (Exception ex) {}
+
+            // 2. TẠO BẢNG HỘP THƯ & LƯU TRỮ (Nếu chưa có)
+            if (dbType.contains("SQLite")) {
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS HopThu (ID INTEGER PRIMARY KEY AUTOINCREMENT, MaNV TEXT, TieuDe TEXT, NoiDung TEXT, NgayGui TEXT DEFAULT (datetime('now', 'localtime')), DaXem INTEGER DEFAULT 0)");
+                stmt.executeUpdate("CREATE TABLE IF NOT EXISTS BangLuongLuuTru (ID INTEGER PRIMARY KEY AUTOINCREMENT, MaNV TEXT, HoTen TEXT, Thang INTEGER, Nam INTEGER, LuongCung BIGINT, TienThuong BIGINT, TienPhat BIGINT, ThucLinh BIGINT, LyDoGhiChu TEXT)");
+            } else {
+                // SQL Server (Giả lập IF NOT EXISTS bằng try-catch)
+                try {
+                    stmt.executeUpdate("CREATE TABLE HopThu (ID INT PRIMARY KEY IDENTITY(1,1), MaNV VARCHAR(50), TieuDe NVARCHAR(255), NoiDung NVARCHAR(MAX), NgayGui DATETIME DEFAULT GETDATE(), DaXem INT DEFAULT 0)");
+                } catch (Exception e) {}
+                
+                try {
+                    stmt.executeUpdate("CREATE TABLE BangLuongLuuTru (ID INT PRIMARY KEY IDENTITY(1,1), MaNV VARCHAR(50), HoTen NVARCHAR(100), Thang INT, Nam INT, LuongCung BIGINT, TienThuong BIGINT, TienPhat BIGINT, ThucLinh BIGINT, LyDoGhiChu NVARCHAR(MAX))");
+                } catch (Exception e) {}
+            }
+            stmt.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     private static String getRealPath(String fileName) {

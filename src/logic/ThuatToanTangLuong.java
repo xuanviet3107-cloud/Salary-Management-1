@@ -10,7 +10,16 @@ public class ThuatToanTangLuong {
     public static double tinhPhuCapThamNien(Date ngayVaoLam) {
         if (ngayVaoLam == null) return 0;
         
-        LocalDate start = ngayVaoLam.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        LocalDate start;
+        // [FIX] Kiểm tra nếu là java.sql.Date thì dùng toLocalDate() trực tiếp
+        // Tránh lỗi UnsupportedOperationException khi gọi toInstant()
+        if (ngayVaoLam instanceof java.sql.Date) {
+            start = ((java.sql.Date) ngayVaoLam).toLocalDate();
+        } else {
+            // Nếu là java.util.Date thường thì mới dùng toInstant()
+            start = ngayVaoLam.toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+        }
+
         int soNam = Period.between(start, LocalDate.now()).getYears();
 
         if (soNam >= 5) {
@@ -27,6 +36,7 @@ public class ThuatToanTangLuong {
         if (ngayVaoLam == null) return heSoKhoiDiem;
 
         LocalDate start;
+        // [FIX] Áp dụng tương tự cho hàm này
         if (ngayVaoLam instanceof java.sql.Date) {
             start = ((java.sql.Date) ngayVaoLam).toLocalDate();
         } else {
@@ -41,8 +51,6 @@ public class ThuatToanTangLuong {
         if (soLanTang > 9) soLanTang = 9; // Chặn trần
 
         // 3. [THUẬT TOÁN ĐOÁN TRACK LƯƠNG]
-        // Ước lượng hệ số gốc = Hệ số hiện tại - (Số lần đã tăng * 0.33)
-        // Ví dụ: Bà Lựu (1.86, 0 năm) -> Gốc = 1.86 - 0 = 1.86
         float heSoGocUocLuong = heSoHienTai - (soLanTang * 0.33f);
 
         // Phân loại dựa trên ước lượng
@@ -63,21 +71,12 @@ public class ThuatToanTangLuong {
 
     public static double tinhLuongTheoKPI(double luongCu, String xepLoaiKPI) {
         double phanTramTang = 0;
-        
-        switch (xepLoaiKPI.toUpperCase()) { // toUpperCase để chấp nhận cả 'a' và 'A'
-            case "A": // Xuất sắc
-                phanTramTang = 0.20; 
-                break;
-            case "B": // Giỏi
-                phanTramTang = 0.10; 
-                break;
-            case "C": // Khá
-                phanTramTang = 0.05; 
-                break;
-            default: // D hoặc F thì nhịn
-                phanTramTang = 0;
+        switch (xepLoaiKPI.toUpperCase()) { 
+            case "A": phanTramTang = 0.20; break;
+            case "B": phanTramTang = 0.10; break;
+            case "C": phanTramTang = 0.05; break;
+            default: phanTramTang = 0;
         }
-        
         return luongCu * (1 + phanTramTang);
     }
 }

@@ -391,13 +391,37 @@ public class NhanVienDAO {
     }
     
     public boolean guiBaoLoi(String tieuDe, String noiDung) {
-        String sql = "INSERT INTO BaoLoi (TieuDe, NoiDung) VALUES (?, ?)";
-        try (Connection conn = ConnectDB.getConnection();
-             PreparedStatement ps = conn.prepareStatement(sql)) {
+        // 1. Gửi lên Discord trước (Ưu tiên báo động)
+        // Nếu muốn lưu DB trước thì đảo thứ tự cũng được
+        boolean guiDiscordThanhCong = logic.DiscordWebhook.guiThongBao(tieuDe, noiDung);
+
+        // 2. Lưu vào Database (Để dành tra cứu sau)
+        // Bổ sung thêm cột NgayBao và TrangThai cho đầy đủ dữ liệu
+        String sql = "INSERT INTO BaoLoi (TieuDe, NoiDung, NgayBao, TrangThai) VALUES (?, ?, ?, ?)";
+        
+        try (java.sql.Connection conn = database.ConnectDB.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            
             ps.setString(1, tieuDe);
             ps.setString(2, noiDung);
-            return ps.executeUpdate() > 0;
-        } catch (Exception e) { e.printStackTrace(); return false; }
+            
+            // Lấy ngày giờ hiện tại: yyyy-MM-dd HH:mm:ss
+            String ngayGio = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+            ps.setString(3, ngayGio);
+            
+            ps.setString(4, "Chưa xem"); // Mặc định là chưa xem
+
+            int ketQuaDB = ps.executeUpdate();
+            
+            // 3. Trả về kết quả: Chỉ cần 1 trong 2 thành công là coi như OK
+            // (Hoặc cậu có thể khó tính hơn: return guiDiscordThanhCong && (ketQuaDB > 0);)
+            return guiDiscordThanhCong || (ketQuaDB > 0);
+
+        } catch (Exception e) {
+            e.printStackTrace();
+            // Nếu lỗi DB nhưng Discord đã gửi được thì vẫn coi là tạm ổn
+            return guiDiscordThanhCong;
+        }
     }
     
     public boolean congTienThuong(long soTien, String lyDo) {
@@ -653,7 +677,7 @@ public class NhanVienDAO {
             pstm.setString(1, maThu);
             pstm.executeUpdate();
         } catch (Exception e) { e.printStackTrace(); }
-    }
+    }   
     
     
 }

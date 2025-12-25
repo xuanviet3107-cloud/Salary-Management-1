@@ -172,6 +172,8 @@ public class NhanVienUI {
 
         // 1. Tính toán số liệu lương
         long luongCung = (long) (myProfile.getLuongCoBan() * myProfile.getHeSoLuong());
+        double phanTramTN = logic.ThuatToanTangLuong.tinhPhuCapThamNien(myProfile.getNgayVaoLam());
+        long tienThamNien = (long) (luongCung * phanTramTN);
         long phuCapAn = 730000;
         long phuCapXang = 300000;
         long thuongDoanhSo = 500000;
@@ -180,8 +182,8 @@ public class NhanVienUI {
         
         long tongPhuCap = phuCapAn + phuCapXang;
         long tongThuong = myProfile.getTienThuong() + thuongDoanhSo + thuongTet;
-        long thucLinh = luongCung + tongPhuCap + tongThuong - phat;
-
+        long thucLinh = luongCung + tienThamNien + phuCapAn + phuCapXang + tongThuong - phat;
+        
         // 2. Vẽ Biểu Đồ (Bên Trái) - Giữ nguyên logic cũ
         JPanel pnlCharts = new JPanel(new GridLayout(2, 1, 0, 20));
         pnlCharts.setBounds(30, 20, 400, 600);
@@ -249,6 +251,7 @@ public class NhanVienUI {
         String[] columns = {"Khoản Mục", "Số Tiền (VNĐ)"};
         Object[][] data = {
             {"Lương Cứng (HS " + myProfile.getHeSoLuong() + ")", String.format("%,d", luongCung)},
+            {"Phụ Cấp Thâm Niên (" + String.format("%.0f%%", phanTramTN * 100) + ")", String.format("%,d", tienThamNien)},
             {"Phụ Cấp Ăn Trưa", String.format("%,d", phuCapAn)},
             {"Phụ Cấp Xăng Xe", String.format("%,d", phuCapXang)},
             {"Thưởng Doanh Số", String.format("%,d", thuongDoanhSo)},

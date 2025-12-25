@@ -42,7 +42,7 @@ public class AdminUI extends JFrame {
     protected JButton btnThem, btnSua, btnXoa, btnPhat, btnLoad, btnMoTinhLuong, btnPhatLuong;
     
     protected JLabel lblMa, lblTen, lblPhong, lblLuong, lblHS, lblSort;
-    protected JButton btnLamMoi, btnTangLuong, btnThongKe, btnBaoLoi, btnChamCongLe;
+    protected JButton btnLamMoi, btnTangLuong, btnThongKe, btnBaoLoi, btnChamCongLe, btnLogOut;
     protected JButton btnTimKiem, btnQuanLyTK, btnGiamLuong, btnChotThang, btnXuatExcel, btnThuongNong;
     protected JButton btnSortMa, btnSortTen, btnSortLuong, btnLichSu, btnKhoiPhuc;
     
@@ -168,6 +168,32 @@ public class AdminUI extends JFrame {
         pnlInput.add(cboHeSo);
         
         // --- CÁC NÚT CHỨC NĂNG (GIỮ NGUYÊN) ---
+        btnLogOut = new JButton();
+        btnLogOut.setBounds(940, 10, 60, 40); // Nằm góc phải trên cùng
+        btnLogOut.setFocusPainted(false);
+        btnLogOut.setContentAreaFilled(false); // Trong suốt (không màu nền)
+        btnLogOut.setBorderPainted(false);     // Không viền
+        btnLogOut.setCursor(new java.awt.Cursor(java.awt.Cursor.HAND_CURSOR));
+        btnLogOut.setToolTipText("Đăng Xuất hệ thống");
+        try {
+            
+            java.net.URL imgURL = getClass().getResource("/icon/logout.png");
+            if (imgURL != null) {
+                javax.swing.ImageIcon icon = new javax.swing.ImageIcon(imgURL);
+                java.awt.Image img = icon.getImage().getScaledInstance(24, 24, java.awt.Image.SCALE_SMOOTH);
+                btnLogOut.setIcon(new javax.swing.ImageIcon(img));
+            } else {
+                // Nếu chưa có ảnh thì dùng tạm icon Emoji "Cánh cửa" này
+                btnLogOut.setText("🚪"); 
+                btnLogOut.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 20));
+                btnLogOut.setForeground(Color.WHITE); // Màu trắng cho nổi trên nền xanh
+            }
+        } catch (Exception e) {
+            btnLogOut.setText("🚪");
+        }
+
+        pnlHeader.add(btnLogOut);
+        
         btnThem = new JButton("➕ Thêm");
         btnThem.setBounds(650, 60, 95, 30);
         btnThem.setFont(new Font("Dialog", Font.BOLD, 12));

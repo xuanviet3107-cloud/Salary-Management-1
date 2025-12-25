@@ -206,7 +206,7 @@ public class QuanLyNhanVien extends AdminUI {
 		            String luong = java.util.Objects.toString(table.getValueAt(row, 3), "0")
 		                           .replace(",", "").replace(".", "").replace(" VNĐ", "").trim();
 		            
-		            String heSo = java.util.Objects.toString(table.getValueAt(row, 4), "0");
+		            String heSo = java.util.Objects.toString(table.getValueAt(row, 5), "0");
 		
 		            // 2. Đổ dữ liệu lên giao diện (DÙNG ĐÚNG TÊN BIẾN TRONG ADMINUI)
 		            txtMaNV.setText(ma);
@@ -516,6 +516,21 @@ public class QuanLyNhanVien extends AdminUI {
                 solve.xuLyGuiPhieuLuongRieng(maNV);
             }
         });    
+        if (btnLogOut != null) {
+            btnLogOut.addActionListener(e -> {
+                // Hỏi xác nhận cho lịch sự
+                int choice = JOptionPane.showConfirmDialog(this, 
+                    "Bạn có chắc muốn đăng xuất không?", 
+                    "Đăng Xuất", 
+                    JOptionPane.YES_NO_OPTION, 
+                    JOptionPane.QUESTION_MESSAGE);
+                
+                if (choice == JOptionPane.YES_OPTION) {
+                    this.dispose(); // Đóng cửa sổ hiện tại
+                    new DangNhapUI().setVisible(true); // Mở lại màn hình đăng nhập
+                }
+            });
+        }
     }
     
     private static float layGiaTriFloatTuCbo(JComboBox<String> cbo) throws NumberFormatException {
@@ -582,7 +597,8 @@ public class QuanLyNhanVien extends AdminUI {
                     heSoTangCa,
                     nv.getTienThuong(),
                     nv.getTienPhat(),
-                    0 // Tạm tính 0 người phụ thuộc
+                    0,
+                    nv.getNgayVaoLam()
                 );
             }
 

@@ -295,9 +295,14 @@ public class HienThiCuaSo {
             }
 
             NhanVienDAO dao = new NhanVienDAO();
-            dao.guiBaoLoi(tieuDe, noiDung);
-            JOptionPane.showMessageDialog(dialog, "Cảm ơn! Báo cáo của bạn đã được gửi.");
-            dialog.dispose();
+            boolean ketQua = dao.guiBaoLoi(tieuDe, noiDung);
+            
+            if (ketQua) {
+                JOptionPane.showMessageDialog(dialog, "✅ Cảm ơn! Báo cáo đã được gửi lên Discord.");
+                dialog.dispose();
+            } else {
+                JOptionPane.showMessageDialog(dialog, "❌ Gửi thất bại!\nVui lòng kiểm tra mạng hoặc Webhook URL.", "Lỗi Hệ Thống", JOptionPane.ERROR_MESSAGE);
+            }
         });
 
         dialog.getContentPane().add(btnGui); 

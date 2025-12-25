@@ -2,6 +2,8 @@ package logic;
 
 public class MayTinhLuong {
     
+    // --- CÁC HÀM PHỤ TRỢ (Đừng xóa mấy cái này nhé) ---
+
     public static double tinhTongLuong(double luong1Gio, double gioChuan, double gioTangCa, double heSoTangCa, boolean coNghiThaiSan) {
         double troCapThaiSan = 0;
         double luongChuan = gioChuan * luong1Gio;
@@ -12,12 +14,11 @@ public class MayTinhLuong {
             luongChuan = 0;
             luongTangCa = 0;
         }
-
         return luongChuan + luongTangCa + troCapThaiSan;
     }
 
     public static double tinhBaoHiem(double tongLuong) {
-        return tongLuong * 0.105; // 10.5%
+        return tongLuong * 0.105; // 10.5% Bảo hiểm
     }
 
     public static double tinhThueTNCN(double tongLuong, int soNguoiPhuThuoc) {
@@ -39,20 +40,34 @@ public class MayTinhLuong {
         return (thuNhapTinhThue * 0.35) - 9850000;
     }
 
-    public static long tinhThucLinhFinal(long luongCoBan, float heSoLuong, double gioTangCa, double heSoTangCa, long tienThuong, long tienPhat, int soNguoiPhuThuoc) {
-        // 1. Quy đổi ra lương giờ (giả sử 26 ngày công chuẩn, 8h/ngày)
-        double luongThucTe = luongCoBan * heSoLuong; 
-        double luong1Gio = luongThucTe / 26 / 8;
+    // --- HÀM TÍNH LƯƠNG CHÍNH (Đã cập nhật logic Thâm Niên) ---
+
+    public static long tinhThucLinhFinal(long luongCoBan, float heSoLuong, double gioTangCa, double heSoTangCa, 
+                                         long tienThuong, long tienPhat, int soNguoiPhuThuoc, 
+                                         java.util.Date ngayVaoLam) {
         
-        // 2. Tính Gross (Lương cứng + Tăng ca)
-        double tongLuongGross = luongThucTe + (gioTangCa * luong1Gio * heSoTangCa);
+        // 1. Lương Cứng
+        long luongCung = (long) (luongCoBan * heSoLuong);
         
-        // 3. Tính các khoản trừ (Dựa trên Gross)
+        // 2. Tính Tiền Thâm Niên (Gọi sang file ThuatToanTangLuong)
+        double phanTramThamNien = logic.ThuatToanTangLuong.tinhPhuCapThamNien(ngayVaoLam);
+        long tienThamNien = (long) (luongCung * phanTramThamNien);
+        
+        // 3. Tính lương 1 giờ (để tính OT)
+        double luong1Gio = (double)luongCung / 26 / 8;
+        
+        // 4. Tổng Gross = Lương cứng + Thâm niên + OT
+        double tongLuongGross = luongCung + tienThamNien + (gioTangCa * luong1Gio * heSoTangCa);
+        
+        // 5. Các khoản trừ (Gọi hàm bên trên - Hết lỗi nhé!)
         double baoHiem = tinhBaoHiem(tongLuongGross);
         double thue = tinhThueTNCN(tongLuongGross, soNguoiPhuThuoc);
         
-        // 4. Thực lĩnh = (Gross - Trừ) + Thưởng - Phạt
-        double thucLinh = (tongLuongGross - baoHiem - thue) + tienThuong - tienPhat;
+        // 6. Phụ cấp cố định (Ăn + Xăng)
+        long phuCapCung = 730000 + 300000; 
+
+        // 7. Chốt Thực Lĩnh
+        double thucLinh = (tongLuongGross - baoHiem - thue) + phuCapCung + tienThuong - tienPhat;
         
         return (long) Math.round(thucLinh);
     }

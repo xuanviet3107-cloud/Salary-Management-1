@@ -441,7 +441,7 @@ public class XuLySuKien {
             java.sql.Connection conn = database.ConnectDB.getConnection();
             
             // 1. Lấy dữ liệu thô để tính toán
-            String sqlGet = "SELECT MaNV, LuongCoBan, HeSoLuong, GioTangCa, HeSoTangCa, TienThuong, TienPhat FROM NhanVien";
+            String sqlGet = "SELECT MaNV, LuongCoBan, HeSoLuong, GioTangCa, HeSoTangCa, TienThuong, TienPhat, NgayVaoLam FROM NhanVien";
             PreparedStatement psGet = conn.prepareStatement(sqlGet);
             ResultSet rs = psGet.executeQuery();
             
@@ -455,13 +455,14 @@ public class XuLySuKien {
                 float heSo = rs.getFloat("HeSoLuong");
                 double gioOT = rs.getDouble("GioTangCa"); // Cột mới
                 double heSoOT = rs.getDouble("HeSoTangCa"); // Cột mới
+                java.sql.Date ngayVaoLam = rs.getDate("NgayVaoLam");
                 if (heSoOT == 0) heSoOT = 1.5; // Giá trị mặc định nếu null
                 
                 long thuong = rs.getLong("TienThuong");
                 long phat = rs.getLong("TienPhat");
                 
                 // Giả định số người phụ thuộc là 0 (hoặc cậu có thể thêm cột này vào DB sau)
-                long thucLinh = MayTinhLuong.tinhThucLinhFinal(luongCB, heSo, gioOT, heSoOT, thuong, phat, 0);
+                long thucLinh = MayTinhLuong.tinhThucLinhFinal(luongCB, heSo, gioOT, heSoOT, thuong, phat, 0,ngayVaoLam);
                 
                 // Đẩy vào Batch Update
                 psUpdate.setLong(1, thucLinh);
