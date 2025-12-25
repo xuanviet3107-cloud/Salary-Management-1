@@ -17,7 +17,7 @@ import javax.swing.SwingConstants;
 import javax.swing.border.TitledBorder;
 import javax.swing.table.DefaultTableModel;
 
-public class NhanVienUI extends JFrame {
+public class AdminUI extends JFrame {
 	
 	protected String lastMa = "";
 	protected String lastTen = "";
@@ -29,6 +29,9 @@ public class NhanVienUI extends JFrame {
 	protected java.util.Set<String> secretsFound = new java.util.HashSet<>();
 	protected boolean isNeonUnlocked = false;
 	protected boolean isNeonActive = false;
+	protected boolean isSortMaAsc = true;    
+    protected boolean isSortTenAsc = true;
+    protected boolean isSortLuongAsc = true;
 
 	protected JLabel lblContraHint;
 	protected JLabel lblSnake;
@@ -36,7 +39,7 @@ public class NhanVienUI extends JFrame {
 
     protected JTable table;
     protected DefaultTableModel model;
-    protected JButton btnThem, btnSua, btnXoa, btnPhat, btnLoad, btnMoTinhLuong;
+    protected JButton btnThem, btnSua, btnXoa, btnPhat, btnLoad, btnMoTinhLuong, btnPhatLuong;
     
     protected JLabel lblMa, lblTen, lblPhong, lblLuong, lblHS, lblSort;
     protected JButton btnLamMoi, btnTangLuong, btnThongKe, btnBaoLoi, btnChamCongLe;
@@ -45,21 +48,22 @@ public class NhanVienUI extends JFrame {
     
     protected JTextField txtMaNV;
     protected JTextField txtHoTen;
+    protected JTextField txtLuongCoBan;
     
     protected JComboBox<String> cboPhongBan;
-    protected JComboBox<String> cboLuongCoBan;
+
     protected JComboBox<String> cboHeSo;
     // ----------------------------------------------------
 
     private static final long serialVersionUID = 2L;
 
-    public NhanVienUI() {                                           // Hàm khởi tạo
+    public AdminUI() {                                           // Hàm khởi tạo
         initUI();
     }
 
     protected void initUI() {                                       // Hàm 'Hiển thị'
 
-        setTitle("Phần mềm Quản lý Nhân sự & Tiền lương Konami Enterprise");
+        setTitle("Phần mềm Quản lý Bảng lương Nhân viên Konami");
         setSize(1000, 720);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -72,7 +76,7 @@ public class NhanVienUI extends JFrame {
         pnlHeader.setBounds(0, 0, 1000, 50);
         getContentPane().add(pnlHeader);
         
-        JLabel lblTieuDe = new JLabel("HỆ THỐNG QUẢN TRỊ NHÂN SỰ");
+        JLabel lblTieuDe = new JLabel("HỆ THỐNG QUẢN LÝ NHÂN VIÊN");
         lblTieuDe.setFont(new Font("Segoe UI", Font.BOLD, 20));
         lblTieuDe.setForeground(Color.WHITE);
         lblTieuDe.setHorizontalAlignment(SwingConstants.CENTER);
@@ -120,32 +124,49 @@ public class NhanVienUI extends JFrame {
         pnlInput.add(cboPhongBan);
 
         // --- HÀNG 2 ---
-        lblLuong = new JLabel("Lương:");
+     // --- TÌM ĐOẠN NÀY TRONG initUI() VÀ THAY THẾ ---
+
+        lblLuong = new JLabel("Lương CS:"); // Đổi tên nhãn cho chuẩn
         lblLuong.setBounds(20, 60, 60, 25);
         lblLuong.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         pnlInput.add(lblLuong);
         
-        // CBO LƯƠNG (Các mốc lương phổ biến)
-        String[] mocLuong = {"Thỏa thuận...", "5,000,000", "7,000,000", "10,000,000", "15,000,000", "20,000,000", "30,000,000"};
-        cboLuongCoBan = new JComboBox<>(mocLuong);
-        cboLuongCoBan.setEditable(true); // Nhập số lẻ thoải mái
-        cboLuongCoBan.setBounds(80, 60, 120, 25);
-        cboLuongCoBan.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        pnlInput.add(cboLuongCoBan);
+        // [THAY ĐỔI 1] Cố định mức Lương Cơ Sở (2.340.000 đ)
+        // Không cho phép nhập tay hay chọn mức khác
+        txtLuongCoBan = new JTextField("2,340,000 VNĐ");
+        txtLuongCoBan.setEditable(false); // Không cho sửa
+        txtLuongCoBan.setBackground(new Color(230, 230, 230)); 
+        txtLuongCoBan.setHorizontalAlignment(SwingConstants.CENTER);
+        txtLuongCoBan.setBounds(80, 60, 120, 25);
+        txtLuongCoBan.setFont(new Font("Segoe UI", Font.BOLD, 12));
+        txtLuongCoBan.setBorder(javax.swing.BorderFactory.createLineBorder(Color.LIGHT_GRAY));
+        pnlInput.add(txtLuongCoBan);
 
         lblHS = new JLabel("Hệ số:");
         lblHS.setBounds(217, 60, 39, 25);
         lblHS.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         pnlInput.add(lblHS);
         
-        // CBO HỆ SỐ (Các mốc bằng cấp)
-        String[] mocHeSo = {"1.0 (Thử việc)", "1.86 (Trung cấp)", "2.10 (Cao đẳng)", "2.34 (Đại học)", "2.67 (Thạc sĩ)"};
-        cboHeSo = new JComboBox<>(mocHeSo);
-        cboHeSo.setEditable(true);
+        // [THAY ĐỔI 2] Cập nhật Bảng Hệ Số Công Chức (Đại học, Cao đẳng...)
+        String[] mocHeSoNhaNuoc = {
+            "1.86 (Cán sự 1)", 
+            "2.06 (Cán sự 2)",
+            "2.10 (Cao đẳng 1)", 
+            "2.34 (Đại học 1)", 
+            "2.67 (Đại học 2)", 
+            "3.00 (Đại học 3)",
+            "3.33 (Đại học 4)", 
+            "3.66 (Đại học 5)",
+            "3.99 (Đại học 6)",
+            "4.32 (Đại học 7)",
+            "8.00 (Chuyên gia cao cấp)"
+        };
+        cboHeSo = new JComboBox<>(mocHeSoNhaNuoc);
+        cboHeSo.setEditable(true); // Vẫn cho nhập tay nếu có hệ số lẻ
         cboHeSo.setBounds(259, 60, 120, 25);
         cboHeSo.setFont(new Font("Segoe UI", Font.PLAIN, 13));
         pnlInput.add(cboHeSo);
-
+        
         // --- CÁC NÚT CHỨC NĂNG (GIỮ NGUYÊN) ---
         btnThem = new JButton("➕ Thêm");
         btnThem.setBounds(650, 60, 95, 30);
@@ -186,17 +207,25 @@ public class NhanVienUI extends JFrame {
         	public void actionPerformed(ActionEvent e) {
         	}
         });
-        btnSortMa.setBounds(160, 165, 80, 25);
+        btnSortMa.setBounds(82, 165, 100, 25);
         btnSortMa.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         getContentPane().add(btnSortMa);
 
         btnSortTen = new JButton("Họ Tên");
-        btnSortTen.setBounds(250, 165, 80, 25);
+        btnSortTen.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        	}
+        });
+        btnSortTen.setBounds(192, 165, 100, 25);
         btnSortTen.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         getContentPane().add(btnSortTen);
 
         btnSortLuong = new JButton("Lương");
-        btnSortLuong.setBounds(340, 165, 80, 25);
+        btnSortLuong.addActionListener(new ActionListener() {
+        	public void actionPerformed(ActionEvent e) {
+        	}
+        });
+        btnSortLuong.setBounds(302, 165, 100, 25);
         btnSortLuong.setFont(new Font("Segoe UI", Font.PLAIN, 11));
         getContentPane().add(btnSortLuong);
         
@@ -299,6 +328,13 @@ public class NhanVienUI extends JFrame {
         btnKhoiPhuc.setForeground(Color.WHITE);
         btnKhoiPhuc.setFont(new Font("Dialog", Font.BOLD, 12));
         getContentPane().add(btnKhoiPhuc);
+        
+        btnPhatLuong = new JButton("📩 Phát Lương");
+        btnPhatLuong.setBounds(450, 165, 140, 25); 
+        btnPhatLuong.setFont(new Font("Dialog", Font.BOLD, 12));
+        btnPhatLuong.setBackground(new Color(155, 89, 182)); 
+        btnPhatLuong.setForeground(Color.WHITE);
+        getContentPane().add(btnPhatLuong);
         // ------------------------
         
         lblSort = new JLabel("Sắp xếp theo:");

@@ -48,6 +48,7 @@ public class NhanVienDAO {
         try {
             java.sql.Connection con = database.ConnectDB.getConnection();
             
+            // Câu lệnh SQL lấy tất cả các cột
             String sql = "SELECT NV.*, PB.TenPB " +
                          "FROM NhanVien NV " +
                          "JOIN PhongBan PB ON NV.MaPB = PB.MaPB " +
@@ -73,7 +74,17 @@ public class NhanVienDAO {
                 nv.setTienPhat(rs.getLong("TienPhat"));
                 nv.setSoNgayDiTre(rs.getInt("SoNgayDiTre"));
                 
-                // [ĐÃ SỬA] Dùng hàm xử lý ngày thông minh thay vì rs.getDate()
+                // --- [QUAN TRỌNG] THÊM ĐOẠN NÀY ĐỂ LẤY DỮ LIỆU MỚI ---
+                try {
+                    nv.setGioTangCa(rs.getDouble("GioTangCa"));
+                    nv.setHeSoTangCa(rs.getDouble("HeSoTangCa"));
+                    nv.setThucLinh(rs.getLong("ThucLinh"));
+                    nv.setLyDoThuongPhat(rs.getString("LyDoThuongPhat"));
+                } catch (Exception e) {
+                    // Nếu cột chưa có trong DB thì bỏ qua, không crash
+                }
+                // -----------------------------------------------------
+                
                 nv.setNgayVaoLam(layNgayTuResultSet(rs, "NgayVaoLam")); 
                 
                 list.add(nv);
@@ -83,43 +94,47 @@ public class NhanVienDAO {
         }
         return list;
     }
-
+    
     public boolean themNhanVien(NhanVien nv) {
-        String sql = "INSERT INTO NhanVien (MaNV, HoTen, MaPB, LuongCoBan, HeSoLuong, NgayVaoLam) VALUES (?, ?, ?, ?, ?, ?)";
-        try (Connection conn = ConnectDB.getConnection();
-             PreparedStatement pstm = conn.prepareStatement(sql)) {
-            
-            pstm.setString(1, nv.getMaNV());
-            pstm.setString(2, nv.getHoTen());
-            pstm.setString(3, nv.getMaPB());
-            pstm.setLong(4, nv.getLuongCoBan());
-            pstm.setFloat(5, nv.getHeSoLuong());
-            pstm.setString(6, dateToString(nv.getNgayVaoLam())); 
-            
-            return pstm.executeUpdate() > 0;
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            return false;
-        }
+    // [FIX] Gán cứng lương cơ bản trong code, bất chấp UI gửi xuống cái gì
+    String sql = "INSERT INTO NhanVien (MaNV, HoTen, MaPB, LuongCoBan, HeSoLuong, NgayVaoLam) VALUES (?, ?, ?, ?, ?, ?)";
+    try (Connection conn = ConnectDB.getConnection();
+         PreparedStatement pstm = conn.prepareStatement(sql)) {
+        
+        pstm.setString(1, nv.getMaNV());
+        pstm.setString(2, nv.getHoTen());
+        pstm.setString(3, nv.getMaPB());
+        
+        // [QUAN TRỌNG] Gán cứng 2tr340k ở đây
+        pstm.setLong(4, 2340000); 
+        
+        pstm.setFloat(5, nv.getHeSoLuong());
+        pstm.setString(6, dateToString(nv.getNgayVaoLam())); 
+        
+        return pstm.executeUpdate() > 0;
+    } catch (Exception ex) {
+        ex.printStackTrace();
+        return false;
     }
-
+    }
+    
     public boolean suaNhanVien(NhanVien nv) {
-        String sql = "UPDATE NhanVien SET HoTen=?, MaPB=?, LuongCoBan=?, HeSoLuong=? WHERE MaNV=?";
-        try (Connection conn = ConnectDB.getConnection();
-             PreparedStatement pstm = conn.prepareStatement(sql)) {
-            
-            pstm.setString(1, nv.getHoTen());
-            pstm.setString(2, nv.getMaPB());
-            pstm.setLong(3, nv.getLuongCoBan());
-            pstm.setFloat(4, nv.getHeSoLuong());
-            pstm.setString(5, nv.getMaNV());
-            
-            return pstm.executeUpdate() > 0;
-        } catch (Exception ex) {
-            return false;
-        }
+    String sql = "UPDATE NhanVien SET HoTen=?, MaPB=?, HeSoLuong=? WHERE MaNV=?";
+    try (Connection conn = ConnectDB.getConnection();
+         PreparedStatement pstm = conn.prepareStatement(sql)) {
+        
+        pstm.setString(1, nv.getHoTen());
+        pstm.setString(2, nv.getMaPB());
+        // pstm.setLong(3, nv.getLuongCoBan()); <-- XÓA DÒNG NÀY (Dòng gây lỗi về 0)
+        pstm.setFloat(3, nv.getHeSoLuong()); // Đẩy index lên (4 -> 3)
+        pstm.setString(4, nv.getMaNV());     // Đẩy index lên (5 -> 4)
+        
+        return pstm.executeUpdate() > 0;
+    } catch (Exception ex) {
+        return false;
     }
-
+    }
+    
     public boolean xoaNhanVien(String maNV) {
         try {
             java.sql.Connection con = database.ConnectDB.getConnection();
@@ -211,13 +226,19 @@ public class NhanVienDAO {
                     rs.getLong("LuongCoBan"),
                     rs.getFloat("HeSoLuong")
                 );
-                nv.setTenPB(rs.getString("TenPB")); 
-                nv.setPhuCap(rs.getLong("PhuCap")); 
+                
+                // [FIX] BỔ SUNG CÁC TRƯỜNG MỚI ĐỂ KHÔNG BỊ MẤT DỮ LIỆU KHI TÌM KIẾM
+                nv.setGioTangCa(rs.getDouble("GioTangCa"));
+                nv.setHeSoTangCa(rs.getDouble("HeSoTangCa"));
                 nv.setTienThuong(rs.getLong("TienThuong"));
                 nv.setTienPhat(rs.getLong("TienPhat"));
+                nv.setThucLinh(rs.getLong("ThucLinh")); // Quan trọng
+                nv.setLyDoThuongPhat(rs.getString("LyDoThuongPhat"));
+                
+                nv.setTenPB(rs.getString("TenPB")); 
+                nv.setPhuCap(rs.getLong("PhuCap")); 
                 nv.setSoNgayDiTre(rs.getInt("SoNgayDiTre"));
                 
-                // [ĐÃ SỬA] Cũng phải áp dụng ở đây luôn
                 nv.setNgayVaoLam(layNgayTuResultSet(rs, "NgayVaoLam"));
                 
                 list.add(nv);
@@ -241,14 +262,21 @@ public class NhanVienDAO {
                     nv.setMaNV(rs.getString("MaNV"));
                     nv.setHoTen(rs.getString("HoTen"));
                     nv.setMaPB(rs.getString("MaPB"));
+                    nv.setGioiTinh(rs.getString("GioiTinh"));
                     nv.setLuongCoBan(rs.getLong("LuongCoBan"));
                     nv.setHeSoLuong(rs.getFloat("HeSoLuong"));
+                    
+                    // [FIX] Bổ sung map dữ liệu mới
+                    nv.setGioTangCa(rs.getDouble("GioTangCa"));
+                    nv.setHeSoTangCa(rs.getDouble("HeSoTangCa"));
+                    nv.setThucLinh(rs.getLong("ThucLinh"));
+                    nv.setLyDoThuongPhat(rs.getString("LyDoThuongPhat"));
+                    
                     nv.setTienThuong(rs.getLong("TienThuong"));
                     nv.setSoNgayDiTre(rs.getInt("SoNgayDiTre"));
-                    nv.setTienPhat(rs.getLong("TienPhat")); // Bổ sung cho đủ
-                    nv.setPhuCap(rs.getLong("PhuCap"));     // Bổ sung cho đủ
+                    nv.setTienPhat(rs.getLong("TienPhat"));
+                    nv.setPhuCap(rs.getLong("PhuCap"));     
                     
-                    // [ĐÃ SỬA] Dùng hàm xử lý ngày thông minh
                     nv.setNgayVaoLam(layNgayTuResultSet(rs, "NgayVaoLam"));
                     nv.setTenPB(rs.getString("TenPB"));
                 }
@@ -258,7 +286,7 @@ public class NhanVienDAO {
         }
         return nv;
     }
- 
+    
     public List<String> layDanhSachPhongBan() {
         List<String> list = new ArrayList<>();
         String sql = "SELECT DISTINCT TenPB FROM PhongBan";
@@ -386,6 +414,18 @@ public class NhanVienDAO {
             stmt.setString(2, tenPhong);
             return stmt.executeUpdate() > 0;
         } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    public void congTienThuongCaNhan(String maNV, long soTien) {
+        String sql = "UPDATE NhanVien SET TienThuong = TienThuong + ? WHERE MaNV = ?";
+        try (java.sql.Connection conn = database.ConnectDB.getConnection();
+             java.sql.PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setLong(1, soTien);
+            pstm.setString(2, maNV);
+            pstm.executeUpdate();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
     
     public String chuyenTenPhongThanhMa(String tenPhong) {
@@ -539,4 +579,61 @@ public class NhanVienDAO {
             return false; 
         }
     }
+    
+    public boolean capNhatHeSo(String maNV, float heSoMoi) {
+        String sql = "UPDATE NhanVien SET HeSoLuong = ? WHERE MaNV = ?";
+        try (java.sql.Connection conn = database.ConnectDB.getConnection();
+             java.sql.PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setFloat(1, heSoMoi);
+            ps.setString(2, maNV);
+            return ps.executeUpdate() > 0;
+        } catch (Exception ex) {
+            ex.printStackTrace();
+            return false;
+        }
+    }
+    
+    public boolean guiThuMoi(String maNV, String tieuDe, String noiDung) {
+        // Lưu ý: Dùng CURRENT_TIMESTAMP để lấy giờ hiện tại
+        String sql = "INSERT INTO HopThu (MaNV, TieuDe, NoiDung, NgayGui, DaXem) VALUES (?, ?, ?, CURRENT_TIMESTAMP, 0)";
+        try (java.sql.Connection conn = database.ConnectDB.getConnection();
+             java.sql.PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setString(1, maNV);
+            pstm.setString(2, tieuDe);
+            pstm.setString(3, noiDung);
+            return pstm.executeUpdate() > 0;
+        } catch (Exception e) { e.printStackTrace(); return false; }
+    }
+
+    public java.util.List<String[]> layDanhSachThu(String maNV) {
+        java.util.List<String[]> list = new java.util.ArrayList<>();
+        String sql = "SELECT * FROM HopThu WHERE MaNV = ? ORDER BY NgayGui DESC";
+        try (java.sql.Connection conn = database.ConnectDB.getConnection();
+             java.sql.PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setString(1, maNV);
+            try (java.sql.ResultSet rs = pstm.executeQuery()) {
+                while (rs.next()) {
+                    String[] row = new String[5];
+                    row[0] = rs.getString("MaThu");
+                    row[1] = rs.getString("TieuDe");
+                    row[2] = rs.getString("NoiDung");
+                    row[3] = rs.getString("NgayGui");
+                    row[4] = rs.getInt("DaXem") == 0 ? "Chưa xem" : "Đã xem";
+                    list.add(row);
+                }
+            }
+        } catch (Exception e) { e.printStackTrace(); }
+        return list;
+    }
+    
+    public void danhDauDaXem(String maThu) {
+        String sql = "UPDATE HopThu SET DaXem = 1 WHERE MaThu = ?";
+        try (java.sql.Connection conn = database.ConnectDB.getConnection();
+             java.sql.PreparedStatement pstm = conn.prepareStatement(sql)) {
+            pstm.setString(1, maThu);
+            pstm.executeUpdate();
+        } catch (Exception e) { e.printStackTrace(); }
+    }
+    
+    
 }

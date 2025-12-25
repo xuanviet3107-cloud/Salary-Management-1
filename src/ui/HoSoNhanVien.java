@@ -170,6 +170,7 @@ public class HoSoNhanVien {
         JPanel p = new JPanel(null);
         p.setBackground(Color.WHITE);
 
+        // 1. Tính toán số liệu lương
         long luongCung = (long) (myProfile.getLuongCoBan() * myProfile.getHeSoLuong());
         long phuCapAn = 730000;
         long phuCapXang = 300000;
@@ -181,57 +182,41 @@ public class HoSoNhanVien {
         long tongThuong = myProfile.getTienThuong() + thuongDoanhSo + thuongTet;
         long thucLinh = luongCung + tongPhuCap + tongThuong - phat;
 
+        // 2. Vẽ Biểu Đồ (Bên Trái) - Giữ nguyên logic cũ
         JPanel pnlCharts = new JPanel(new GridLayout(2, 1, 0, 20));
         pnlCharts.setBounds(30, 20, 400, 600);
         pnlCharts.setBackground(Color.WHITE);
         pnlCharts.setBorder(javax.swing.BorderFactory.createTitledBorder("TRỰC QUAN HÓA THU NHẬP"));
 
+        // ... (Đoạn code vẽ biểu đồ giữ nguyên, tớ rút gọn để cậu dễ nhìn) ...
+        // --- BẮT ĐẦU ĐOẠN VẼ BIỂU ĐỒ (Copy lại đoạn cũ của cậu vào đây hoặc dùng đoạn dưới) ---
         JPanel pnlBarChart = new JPanel() {
             @Override
             protected void paintComponent(java.awt.Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                int w = getWidth();
-                int h = getHeight();
-                
-                int topMargin = 40; 
-                int bottomMargin = 30;
-                int chartH = h - topMargin - bottomMargin;
-                
+                int w = getWidth(), h = getHeight();
+                int topMargin = 40, bottomMargin = 30, chartH = h - topMargin - bottomMargin;
                 long maxVal = Math.max(thucLinh, Math.max(luongCung, tongThuong));
                 if (maxVal == 0) maxVal = 1;
-
-                int barW = (w - 80) / 3; 
-                if (barW > 60) barW = 60;
-                
+                int barW = (w - 80) / 3; if (barW > 60) barW = 60;
                 int startX = (w - (barW * 3 + 40)) / 2;
-                
                 drawBar(g2, luongCung, maxVal, startX, topMargin, chartH, barW, new Color(52, 152, 219), "Lương");
                 drawBar(g2, tongThuong + tongPhuCap, maxVal, startX + barW + 20, topMargin, chartH, barW, new Color(46, 204, 113), "Thưởng/PC");
                 drawBar(g2, thucLinh, maxVal, startX + (barW + 20) * 2, topMargin, chartH, barW, new Color(231, 76, 60), "Thực Lĩnh");
             }
-
             private void drawBar(Graphics2D g, long val, long max, int x, int topY, int h, int w, Color c, String lbl) {
                 int barHeight = (int)((double)val / max * h);
                 int y = topY + h - barHeight;
-                
-                g.setColor(c);
-                g.fillRect(x, y, w, barHeight);
-                g.setColor(Color.DARK_GRAY);
-                g.drawRect(x, y, w, barHeight);
-                
-                g.setColor(Color.BLACK);
-                g.setFont(new Font("Segoe UI", Font.BOLD, 11));
+                g.setColor(c); g.fillRect(x, y, w, barHeight);
+                g.setColor(Color.BLACK); g.setFont(new Font("Segoe UI", Font.BOLD, 11));
                 String txt = val > 1000000 ? String.format("%.1fM", val/1000000.0) : String.format("%.0fk", val/1000.0);
                 g.drawString(txt, x + (w - g.getFontMetrics().stringWidth(txt))/2, y - 5);
-                
                 g.drawString(lbl, x + (w - g.getFontMetrics().stringWidth(lbl))/2, topY + h + 20);
             }
         };
-        pnlBarChart.setBackground(Color.WHITE);
-        pnlCharts.add(pnlBarChart);
+        pnlBarChart.setBackground(Color.WHITE); pnlCharts.add(pnlBarChart);
 
         JPanel pnlPieChart = new JPanel() {
             @Override
@@ -239,70 +224,44 @@ public class HoSoNhanVien {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g;
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-
-                long total = luongCung + tongPhuCap + tongThuong;
-                if (total == 0) return;
-
+                long total = luongCung + tongPhuCap + tongThuong; if (total == 0) return;
                 int angleLuong = (int) (360.0 * luongCung / total);
                 int anglePC = (int) (360.0 * tongPhuCap / total);
                 int angleThuong = 360 - angleLuong - anglePC;
-
                 int size = Math.min(getWidth(), getHeight()) - 110;
-                int x = (getWidth() - size) / 2 - 80;
-                int y = (getHeight() - size) / 2;
-                
-                g2.setColor(new Color(52, 152, 219));
-                g2.fillArc(x, y, size, size, 90, angleLuong);
-                
-                g2.setColor(new Color(46, 204, 113));
-                g2.fillArc(x, y, size, size, 90 + angleLuong, anglePC);
-                
-                g2.setColor(new Color(243, 156, 18));
-                g2.fillArc(x, y, size, size, 90 + angleLuong + anglePC, angleThuong);
-
-                int lx = x + size + 20;
-                int ly = y + size/2 - 40;
-                drawLegend(g2, lx, ly, new Color(52, 152, 219), "Lương Cứng (" + (int)(100.0*luongCung/total) + "%)");
-                drawLegend(g2, lx, ly + 25, new Color(46, 204, 113), "Phụ Cấp (" + (int)(100.0*tongPhuCap/total) + "%)");
-                drawLegend(g2, lx, ly + 50, new Color(243, 156, 18), "Thưởng & Khác (" + (int)(100.0*tongThuong/total) + "%)");
-                
-                g2.setColor(Color.GRAY);
-                g2.setFont(new Font("Segoe UI", Font.ITALIC, 11));
-                g2.drawString("Biểu đồ cơ cấu thu nhập", x + size/4, y + size + 20);
+                int x = (getWidth() - size) / 2 - 80, y = (getHeight() - size) / 2;
+                g2.setColor(new Color(52, 152, 219)); g2.fillArc(x, y, size, size, 90, angleLuong);
+                g2.setColor(new Color(46, 204, 113)); g2.fillArc(x, y, size, size, 90 + angleLuong, anglePC);
+                g2.setColor(new Color(243, 156, 18)); g2.fillArc(x, y, size, size, 90 + angleLuong + anglePC, angleThuong);
+                drawLegend(g2, x + size + 20, y + size/2 - 40, new Color(52, 152, 219), "Lương (" + (int)(100.0*luongCung/total) + "%)");
+                drawLegend(g2, x + size + 20, y + size/2 - 15, new Color(46, 204, 113), "Phụ Cấp (" + (int)(100.0*tongPhuCap/total) + "%)");
+                drawLegend(g2, x + size + 20, y + size/2 + 10, new Color(243, 156, 18), "Khác (" + (int)(100.0*tongThuong/total) + "%)");
             }
-            
             private void drawLegend(Graphics2D g, int x, int y, Color c, String text) {
-                g.setColor(c);
-                g.fillRect(x, y, 15, 15);
-                g.setColor(Color.BLACK);
-                g.setFont(new Font("Segoe UI", Font.PLAIN, 11));
-                g.drawString(text, x + 20, y + 12);
+                g.setColor(c); g.fillRect(x, y, 10, 10); g.setColor(Color.BLACK); g.setFont(new Font("Segoe UI", Font.PLAIN, 11)); g.drawString(text, x + 15, y + 10);
             }
         };
-        pnlPieChart.setBackground(Color.WHITE);
-        pnlCharts.add(pnlPieChart);
-        
+        pnlPieChart.setBackground(Color.WHITE); pnlCharts.add(pnlPieChart);
         p.add(pnlCharts);
+        // --- KẾT THÚC ĐOẠN BIỂU ĐỒ ---
 
+        // 3. Bảng Chi Tiết Lương (Bên Phải - Trên)
         String[] columns = {"Khoản Mục", "Số Tiền (VNĐ)"};
         Object[][] data = {
             {"Lương Cứng (HS " + myProfile.getHeSoLuong() + ")", String.format("%,d", luongCung)},
             {"Phụ Cấp Ăn Trưa", String.format("%,d", phuCapAn)},
             {"Phụ Cấp Xăng Xe", String.format("%,d", phuCapXang)},
             {"Thưởng Doanh Số", String.format("%,d", thuongDoanhSo)},
-            {"Thưởng Tết (7 năm)", String.format("%,d", thuongTet)},
+            {"Thưởng Tết (Dự kiến)", String.format("%,d", thuongTet)},
             {"Trừ Phạt Đi Trễ", String.format("%,d", -phat)}, 
             {"TỔNG THỰC LĨNH", String.format("%,d", thucLinh)}
         };
 
         DefaultTableModel model = new DefaultTableModel(data, columns) {
-            @Override
-            public boolean isCellEditable(int row, int column) {
-                return false;
-            }
+            @Override public boolean isCellEditable(int row, int column) { return false; }
         };
         JTable table = new JTable(model);
-        table.setRowHeight(35);
+        table.setRowHeight(30); // Giảm chiều cao dòng chút cho gọn
         table.setFont(new Font("Segoe UI", Font.PLAIN, 14));
         
         table.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
@@ -310,26 +269,78 @@ public class HoSoNhanVien {
             public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
                 java.awt.Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
                 if (row == table.getRowCount() - 1) { 
-                    c.setFont(new Font("Segoe UI", Font.BOLD, 15));
-                    c.setForeground(Color.BLUE);
+                    c.setFont(new Font("Segoe UI", Font.BOLD, 14)); c.setForeground(Color.BLUE);
                 } else if (value.toString().startsWith("-")) { 
                     c.setForeground(Color.RED);
-                } else {
-                    c.setForeground(Color.BLACK);
-                }
+                } else { c.setForeground(Color.BLACK); }
                 return c;
             }
         });
 
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBounds(450, 30, 500, 300); 
+        scroll.setBounds(450, 25, 500, 235); // Thu gọn chiều cao để nhường chỗ cho Phúc Lợi
         p.add(scroll);
 
-        JLabel lblNote = new JLabel("<html><i>* Số liệu trên bao gồm các khoản phụ cấp dự kiến chưa trừ BHXH.<br>* Biểu đồ tròn thể hiện tỷ trọng các nguồn thu nhập.</i></html>");
-        lblNote.setBounds(450, 340, 400, 40);
-        lblNote.setForeground(Color.GRAY);
-        p.add(lblNote);
+        // 4. [MỚI] PHẦN PHÚC LỢI & ĐÃI NGỘ (Bên Phải - Dưới)
+        // Tính thâm niên để hiển thị phúc lợi tương ứng
+        int thamNien = 0;
+        if (myProfile.getNgayVaoLam() != null) {
+            LocalDate start = new java.util.Date(myProfile.getNgayVaoLam().getTime()).toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
+            thamNien = Period.between(start, LocalDate.now()).getYears();
+        }
+        
+        // Panel chứa các thẻ phúc lợi
+        JPanel pnlPhucLoi = new JPanel(new GridLayout(2, 2, 10, 10)); // Grid 2x2
+        pnlPhucLoi.setBounds(450, 280, 500, 320);
+        pnlPhucLoi.setBackground(Color.WHITE);
+        pnlPhucLoi.setBorder(javax.swing.BorderFactory.createTitledBorder(
+            javax.swing.BorderFactory.createMatteBorder(1, 0, 0, 0, Color.LIGHT_GRAY),
+            "CHẾ ĐỘ PHÚC LỢI & ĐÃI NGỘ (Level " + thamNien + ")",
+            javax.swing.border.TitledBorder.DEFAULT_JUSTIFICATION,
+            javax.swing.border.TitledBorder.DEFAULT_POSITION,
+            new Font("Segoe UI", Font.BOLD, 13), new Color(0, 150, 136)
+        ));
 
+        // Logic hiển thị phúc lợi theo thâm niên
+        int phepNam = 12 + (thamNien / 5); // Cứ 5 năm thêm 1 ngày phép
+        String levelBh = thamNien >= 3 ? "Bảo Việt Care (VIP)" : "BHYT Cơ Bản";
+        Color colorBh = thamNien >= 3 ? new Color(255, 193, 7) : new Color(33, 150, 243); // Vàng VIP hoặc Xanh thường
+        
+        // Thêm 4 thẻ phúc lợi
+        pnlPhucLoi.add(createBenefitItem("🏥 Bảo Hiểm Sức Khỏe", levelBh, "Đóng 100% chi phí", colorBh));
+        pnlPhucLoi.add(createBenefitItem("🏖️ Nghỉ Phép Năm", phepNam + " ngày/năm", "Được trả lương nếu không nghỉ hết", new Color(76, 175, 80)));
+        pnlPhucLoi.add(createBenefitItem("✈️ Du Lịch Công Ty", "Gói Standard", "1 lần/năm (Team Building)", new Color(156, 39, 176)));
+        pnlPhucLoi.add(createBenefitItem("🎁 Quà Sinh Nhật", "500,000 VNĐ", "Cộng trực tiếp vào lương tháng", new Color(233, 30, 99)));
+
+        p.add(pnlPhucLoi);
+
+        return p;
+    }
+    
+    private JPanel createBenefitItem(String title, String value, String subtext, Color accentColor) {
+        JPanel p = new JPanel(new GridLayout(3, 1));
+        p.setBackground(new Color(250, 250, 250));
+        // Viền trái màu đậm để tạo điểm nhấn
+        p.setBorder(javax.swing.BorderFactory.createCompoundBorder(
+            javax.swing.BorderFactory.createMatteBorder(0, 4, 0, 0, accentColor),
+            javax.swing.BorderFactory.createEmptyBorder(5, 10, 5, 5)
+        ));
+
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setFont(new Font("Dialog", Font.BOLD, 12));
+        lblTitle.setForeground(Color.GRAY);
+        
+        JLabel lblValue = new JLabel(value);
+        lblValue.setFont(new Font("Segoe UI", Font.BOLD, 15));
+        lblValue.setForeground(Color.BLACK);
+        
+        JLabel lblSub = new JLabel(subtext);
+        lblSub.setFont(new Font("Segoe UI", Font.ITALIC, 11));
+        lblSub.setForeground(new Color(100, 100, 100));
+
+        p.add(lblTitle);
+        p.add(lblValue);
+        p.add(lblSub);
         return p;
     }
 
@@ -393,6 +404,148 @@ public class HoSoNhanVien {
         lblNote.setBounds(30, 370, 800, 20);
         lblNote.setForeground(Color.GRAY);
         p.add(lblNote);
+
+        return p;
+    }
+
+    public JPanel createTabMailbox(NhanVien myProfile) {
+        JPanel p = new JPanel(new java.awt.BorderLayout());
+        p.setBackground(Color.WHITE);
+
+        // 1. Header đẹp
+        JPanel pnlHead = new JPanel(new java.awt.BorderLayout());
+        pnlHead.setBackground(Color.WHITE);
+        pnlHead.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 20, 10, 20));
+
+        JLabel lblTitle = new JLabel("HỘP THƯ CÁ NHÂN");
+        lblTitle.setFont(new Font("Segoe UI", Font.BOLD, 18));
+        lblTitle.setForeground(new Color(0, 102, 204));
+        pnlHead.add(lblTitle, java.awt.BorderLayout.WEST);
+
+        JButton btnRefresh = new JButton("Làm mới 🔄");
+        btnRefresh.setFont(new Font("Dialog", Font.PLAIN, 12));
+        btnRefresh.setBackground(new Color(240, 240, 240));
+        pnlHead.add(btnRefresh, java.awt.BorderLayout.EAST);
+        
+        p.add(pnlHead, java.awt.BorderLayout.NORTH);
+
+        // 2. Bảng thư
+        String[] cols = {"ID", "Tiêu Đề", "Ngày Nhận", "Trạng Thái"};
+        DefaultTableModel modelThu = new DefaultTableModel(cols, 0) {
+            @Override
+            public boolean isCellEditable(int row, int column) { return false; }
+        };
+        JTable tblThu = new JTable(modelThu);
+        tblThu.setRowHeight(35);
+        tblThu.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+        
+        // [LILITH EDIT] Tinh chỉnh giao diện OCD
+        tblThu.setShowVerticalLines(false);     // Tắt kẻ dọc (cho thoáng)
+        tblThu.setShowHorizontalLines(true);    // Bật kẻ ngang (để gióng hàng)
+        tblThu.setGridColor(new Color(220, 220, 220)); // Màu kẻ xám nhạt
+        tblThu.setIntercellSpacing(new java.awt.Dimension(0, 1)); // Khoảng cách giữa các dòng
+
+        // [LILITH EDIT] Căn chỉnh độ rộng cột
+        tblThu.getColumnModel().getColumn(0).setPreferredWidth(50);  // ID nhỏ xíu
+        tblThu.getColumnModel().getColumn(0).setMaxWidth(60);        // Chặn không cho to ra
+        
+        tblThu.getColumnModel().getColumn(1).setPreferredWidth(500); // Tiêu đề to nhất
+        
+        tblThu.getColumnModel().getColumn(2).setPreferredWidth(150); // Ngày nhận vừa phải
+        
+        tblThu.getColumnModel().getColumn(3).setPreferredWidth(100); // Trạng thái nhỏ
+        tblThu.getColumnModel().getColumn(3).setMaxWidth(120);       // Chặn max
+        
+        // Renderer: Tô đậm thư chưa đọc + Màu nền xen kẽ
+        tblThu.setDefaultRenderer(Object.class, new javax.swing.table.DefaultTableCellRenderer() {
+            @Override
+            public java.awt.Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
+                java.awt.Component c = super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
+                String status = table.getValueAt(row, 3).toString();
+                
+                // Logic In đậm / In thường
+                if (status.equals("Chưa xem")) {
+                    c.setFont(new Font("Segoe UI", Font.BOLD, 14));
+                    c.setForeground(new Color(0, 0, 0));
+                } else {
+                    c.setFont(new Font("Segoe UI", Font.PLAIN, 14));
+                    c.setForeground(new Color(80, 80, 80)); // Màu xám đậm cho dễ đọc hơn xám nhạt
+                }
+                
+                // Logic Màu nền (Zebra + Selection)
+                if (isSelected) {
+                    c.setBackground(new Color(232, 240, 254));
+                } else {
+                    c.setBackground(Color.WHITE); // Để nền trắng hết cho đường kẻ grid hiện rõ
+                }
+                
+                // Căn lề cho đẹp
+                setBorder(javax.swing.BorderFactory.createEmptyBorder(0, 10, 0, 10)); // Padding chữ
+                return c;
+            }
+        });
+
+        // Hàm nạp dữ liệu
+        Runnable loadData = () -> {
+            modelThu.setRowCount(0);
+            List<String[]> listThu = nvUI.dao.layDanhSachThu(myProfile.getMaNV());
+            tblThu.putClientProperty("dataHidden", listThu); 
+            
+            for (String[] row : listThu) {
+                String trangThaiText = row[4].equals("0") || row[4].equals("Chưa xem") ? "Chưa xem" : "Đã xem";
+                modelThu.addRow(new Object[]{row[0], row[1], row[3], trangThaiText});
+            }
+        };
+
+        // 3. Xử lý sự kiện Click đúp
+        tblThu.addMouseListener(new java.awt.event.MouseAdapter() {
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                if (e.getClickCount() == 2) { 
+                    int row = tblThu.getSelectedRow();
+                    if (row >= 0) {
+                        String idThu = tblThu.getValueAt(row, 0).toString();
+                        String tieuDe = tblThu.getValueAt(row, 1).toString();
+                        
+                        @SuppressWarnings("unchecked")
+                        List<String[]> listData = (List<String[]>) tblThu.getClientProperty("dataHidden");
+                        String noiDung = "Lỗi tải nội dung";
+                        for(String[] item : listData) {
+                            if(item[0].equals(idThu)) {
+                                noiDung = item[2];
+                                break;
+                            }
+                        }
+
+                        nvUI.dao.danhDauDaXem(idThu);
+                        loadData.run();
+
+                        javax.swing.JTextArea txtArea = new javax.swing.JTextArea(noiDung);
+                        txtArea.setEditable(false);
+                        txtArea.setFont(new Font("Monospaced", Font.PLAIN, 13));
+                        txtArea.setLineWrap(true);
+                        txtArea.setWrapStyleWord(true);
+                        txtArea.setBorder(javax.swing.BorderFactory.createEmptyBorder(10, 10, 10, 10));
+                        
+                        JScrollPane scrollMsg = new JScrollPane(txtArea);
+                        scrollMsg.setPreferredSize(new java.awt.Dimension(500, 300));
+                        scrollMsg.setBorder(null);
+                        
+                        JOptionPane.showMessageDialog(p, scrollMsg, "📩 " + tieuDe, JOptionPane.PLAIN_MESSAGE);
+                    }
+                }
+            }
+        });
+
+        btnRefresh.addActionListener(e -> loadData.run());
+
+        loadData.run();
+
+        p.add(new JScrollPane(tblThu), java.awt.BorderLayout.CENTER);
+        
+        JLabel lblHint = new JLabel("<html><i>* Click đúp vào thư để xem chi tiết. Thư chưa đọc sẽ được in đậm.</i></html>", JLabel.CENTER);
+        lblHint.setPreferredSize(new java.awt.Dimension(100, 30));
+        lblHint.setForeground(Color.GRAY);
+        p.add(lblHint, java.awt.BorderLayout.SOUTH);
 
         return p;
     }
