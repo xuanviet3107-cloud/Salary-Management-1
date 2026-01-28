@@ -25,7 +25,7 @@ public class DiscordWebhook {
 
             String jsonPayload = "{\"content\": \"🚨 **BÁO LỖI HỆ THỐNG**\\n**Tiêu đề:** " + safeTieuDe + "\\n**Chi tiết:** " + safeNoiDung + "\"}";
 
-            URL url = new URL(WEBHOOK_URL);
+            URL url = java.net.URI.create(WEBHOOK_URL).toURL();
             conn = (HttpURLConnection) url.openConnection();
             conn.setRequestMethod("POST");
             conn.setRequestProperty("Content-Type", "application/json");

@@ -46,7 +46,7 @@ public class MayTinhLuong {
         // Lương Cứng
         long luongCung = (long) (luongCoBan * heSoLuong);
         
-        // Tính Tiền Thâm Niên (Gọi sang file ThuatToanTangLuong)
+        // Tính Tiền Thâm Niên
         double phanTramThamNien = logic.ThuatToanTangLuong.tinhPhuCapThamNien(ngayVaoLam);
         long tienThamNien = (long) (luongCung * phanTramThamNien);
         

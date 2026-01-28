@@ -653,7 +653,5 @@ public class NhanVienDAO {
             pstm.setString(1, maThu);
             pstm.executeUpdate();
         } catch (Exception e) { e.printStackTrace(); }
-    }    
-    
-    
+    }       
 }
